@@ -145,6 +145,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f1f8f5a6f3d50d89e3797d7593a50f96bb2aaa20ca0cc7be1fb673232c91d72"
 
 [[package]]
+name = "array-init"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d62b7694a562cdf5a74227903507c56ab2cc8bdd1f781ed5cb4cf9c9f810bfc"
+
+[[package]]
 name = "assert_no_alloc"
 version = "1.1.2"
 source = "git+https://github.com/robbert-vdh/rust-assert-no-alloc.git?branch=feature/nested-permit-forbid#a6fb4f62b9624715291e320ea5f0f70e73b035cf"
@@ -294,6 +300,7 @@ dependencies = [
 name = "border_security_plugin"
 version = "0.1.0"
 dependencies = [
+ "array-init",
  "nih_plug",
  "nih_plug_vizia",
 ]

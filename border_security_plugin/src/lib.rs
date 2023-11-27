@@ -1,3 +1,4 @@
+use array_init::array_init;
 use circular_buffer::CircleBuffer;
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
@@ -11,9 +12,11 @@ mod editor;
 // started
 
 const MAX_DELAY: usize = 2;
+const BUCKETS: usize = 2;
 
 pub struct BorderSecurityPlugin {
     params: Arc<BorderSecurityPluginParams>,
+    //Channel - Buckets - Delay Buffer
     delay_buffers: Vec<RefCell<CircleBuffer>>,
 }
 
@@ -22,13 +25,14 @@ pub struct BorderSecurityPluginParams {
     #[persist = "editor-state"]
     editor_state: Arc<ViziaState>,
 
-    /// The parameter's ID is used to identify the parameter in the wrappred plugin API. As long as
-    /// these IDs remain constant, you can rename and reorder these fields as you wish. The
-    /// parameters are exposed to the host in the same order they were defined. In this case, this
-    /// gain parameter is stored as linear gain while the values are displayed in decibels.
-    #[id = "gain"]
-    pub gain: FloatParam,
+    #[nested(array, group = "Delay Parameters")]
+    pub delay_params: [DelayParam; BUCKETS],
+}
 
+#[derive(Params)]
+pub struct DelayParam {
+    /// This parameter's ID will get a `_1`, `_2`, and a `_3` suffix because of how it's used in
+    /// `array_params` above.
     #[id = "delay"]
     pub delay: FloatParam,
 }
@@ -44,41 +48,19 @@ impl Default for BorderSecurityPlugin {
 
 impl Default for BorderSecurityPluginParams {
     fn default() -> Self {
-        Self {
-            editor_state: editor::default_state(),
-
-            // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
-            // to treat these kinds of parameters as if we were dealing with decibels. Storing this
-            // as decibels is easier to work with, but requires a conversion for every sample.
-            gain: FloatParam::new(
-                "Gain",
-                util::db_to_gain(0.0),
-                FloatRange::Skewed {
-                    min: util::db_to_gain(-30.0),
-                    max: util::db_to_gain(30.0),
-                    // This makes the range appear as if it was linear when displaying the values as
-                    // decibels
-                    factor: FloatRange::gain_skew_factor(-30.0, 30.0),
-                },
-            )
-            // Because the gain parameter is stored as linear gain instead of storing the value as
-            // decibels, we need logarithmic smoothing
-            .with_smoother(SmoothingStyle::Logarithmic(50.0))
-            .with_unit(" dB")
-            // There are many predefined formatters we can use here. If the gain was stored as
-            // decibels instead of as a linear gain value, we could have also used the
-            // `.with_step_size(0.1)` function to get internal rounding.
-            .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
-            .with_string_to_value(formatters::s2v_f32_gain_to_db()),
-
+        let delay_params: [DelayParam; BUCKETS] = array_init(|index| DelayParam {
             delay: FloatParam::new(
-                "Delay Length",
+                format!("Delay {index}"),
                 0.0,
                 FloatRange::Linear {
-                    min: (0.0),
-                    max: (MAX_DELAY as f32),
+                    min: 0.0,
+                    max: MAX_DELAY as f32,
                 },
             ),
+        });
+        Self {
+            editor_state: editor::default_state(),
+            delay_params,
         }
     }
 }
@@ -159,25 +141,21 @@ impl Plugin for BorderSecurityPlugin {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        //let num_samples = buffer.samples();
-
         for (i, channel) in buffer.as_slice().iter_mut().enumerate() {
             let mut delay_buffer = self.delay_buffers[i].borrow_mut();
-            // self.delay_buffer_left.next(&mut channel_samples[0]);
-            // self.delay_buffer_right.next(&mut channel_samples[1]);
-            // channel_samples[0] = 0.0;
-            // channel_samples[1] = 0.0;
-            // channel_samples[0] = sample_left;
-            //channel_samples[1] = sample_right;
+
             for sample in channel.iter_mut() {
-                let delaylength = self.params.delay.value();
                 let crossfade_factor = 0.5;
-                let read_offset =
-                    ((delaylength / MAX_DELAY as f32) * delay_buffer.samples() as f32) as usize;
-                let delayed_sample = delay_buffer.next(*sample, read_offset);
-                let wet_sample: f32 =
-                    *sample * (1.0 - crossfade_factor) + delayed_sample * crossfade_factor;
-                *sample = wet_sample;
+                let mut wet_sample = 0.0;
+
+                delay_buffer.write(*sample);
+                let delay_length = self.params.delay_params[0].delay.value();
+                let read_offset = (delay_length / MAX_DELAY as f32
+                    * ((delay_buffer.samples() - 1) as f32))
+                    as usize;
+                wet_sample += delay_buffer.read(read_offset);
+
+                *sample = *sample * (1.0 - crossfade_factor) + wet_sample * crossfade_factor;
             }
         }
 

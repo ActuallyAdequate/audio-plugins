@@ -1,10 +1,9 @@
-use nih_plug::prelude::{util, Editor};
+use nih_plug::prelude::Editor;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::*;
 use nih_plug_vizia::{assets, create_vizia_editor, ViziaState, ViziaTheming};
-use std::sync::atomic::Ordering;
+
 use std::sync::Arc;
-use std::time::Duration;
 
 use crate::BorderSecurityPluginParams;
 
@@ -45,10 +44,13 @@ pub(crate) fn create(
                 .child_top(Stretch(1.0))
                 .child_bottom(Pixels(0.0));
 
-            Label::new(cx, "Gain");
-            ParamSlider::new(cx, Data::params, |params| &params.gain);
-            Label::new(cx, "Delay");
-            ParamSlider::new(cx, Data::params, |params| &params.delay);
+            for i in 0..params.delay_params.len() {
+                let name = format!("Delay {i}");
+                Label::new(cx, &name);
+                ParamSlider::new(cx, Data::params, move |params| {
+                    &params.delay_params[i].delay
+                });
+            }
         })
         .row_between(Pixels(0.0))
         .child_left(Stretch(1.0))

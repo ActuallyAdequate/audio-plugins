@@ -23,7 +23,7 @@ impl CircleBuffer {
         nih_debug_assert!(sample_rate > 0.0);
 
         self.sample_rate = sample_rate;
-        self.num_samples = (sample_rate * capacity_factor as f32).ceil() as usize;
+        self.num_samples = ((sample_rate * capacity_factor as f32).ceil()) as usize;
 
         self.buffer.resize(self.num_samples, 0.0);
     }
@@ -32,7 +32,18 @@ impl CircleBuffer {
         self.num_samples
     }
 
-    pub fn next(&mut self, sample: f32, read_offset: usize) -> f32 {
+    pub fn write(&mut self, sample: f32) {
+        self.buffer[self.write_pos] = sample;
+        self.write_pos += 1 as usize;
+        self.write_pos %= self.num_samples;
+    }
+
+    pub fn read(&self, read_offset: usize) -> f32 {
+        let read_pos = self._get_read_pos(read_offset);
+        return self.buffer[read_pos];
+    }
+
+    fn _get_read_pos(&self, read_offset: usize) -> usize {
         let read_offset = if read_offset >= self.num_samples {
             dbg!("read position would loop the buffer, so is being capped to its max value, read_offset: {}, buffer_length: {}", read_offset, self.num_samples);
             0
@@ -43,16 +54,6 @@ impl CircleBuffer {
             self.num_samples - read_offset
         };
 
-        self.buffer[self.write_pos] = sample;
-
-        let read_pos = (self.write_pos + read_offset) % self.num_samples;
-        self.write_pos += 1 as usize;
-        self.write_pos %= self.num_samples;
-
-        return self.buffer[read_pos];
-    }
-
-    pub fn preview(&self) -> f32 {
-        return self.buffer[self.write_pos];
+        (self.write_pos + (self.num_samples - 1) + read_offset) % self.num_samples
     }
 }
