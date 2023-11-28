@@ -15,3 +15,8 @@ exit
 cd <audio_plugin>
 cargo xtask bundle <audio_plugin> --release
 ```
+
+## Custom Widgets
+Copy one of the widgets and modifify it
+### Changing Text Of slider
+look for display_value_lens and modify the make_lens closure

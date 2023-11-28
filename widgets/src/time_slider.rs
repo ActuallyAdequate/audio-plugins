@@ -126,7 +126,11 @@ impl TimeSlider {
                     let unmodulated_normalized_value_lens =
                         param_data.make_lens(|param| param.unmodulated_normalized_value());
                     let display_value_lens = param_data.make_lens(|param| {
-                        param.normalized_value_to_string(param.unmodulated_normalized_value(), true)
+                        let total_minutes = param.unmodulated_normalized_value() * 1440.0; // 24 hours * 60 minutes
+                        let hours = total_minutes as u32 / 60;
+                        let minutes = total_minutes as u32 % 60;
+
+                        format!("{:02}:{:02}", hours, minutes)
                     });
 
                     // The resulting tuple `(start_t, delta)` corresponds to the start and the

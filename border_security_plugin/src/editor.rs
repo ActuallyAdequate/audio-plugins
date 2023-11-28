@@ -45,9 +45,12 @@ pub(crate) fn create(
                 .height(Pixels(50.0))
                 .child_top(Stretch(1.0))
                 .child_bottom(Pixels(0.0));
-
+            Label::new(cx, "Departure Time");
             for i in 0..params.delay_params.len() {
                 HStack::new(cx, |cx| {
+                    ParamSlider::new(cx, Data::params, move |params| {
+                        &params.delay_params[i].threshold
+                    });
                     TimeSlider::new(cx, Data::params, move |params| {
                         &params.delay_params[i].delay
                     })
@@ -55,6 +58,12 @@ pub(crate) fn create(
                     .background_color(Color::rgb(120, 86, 28))
                     .color(Color::rgb(212, 214, 77))
                     .border_color(Color::rgb(28, 32, 46));
+                    ParamSlider::new(cx, Data::params, move |params| {
+                        &params.delay_params[i].capacity
+                    });
+                    ParamSlider::new(cx, Data::params, move |params| {
+                        &params.delay_params[i].factor
+                    });
                 })
                 .height(Auto);
             }

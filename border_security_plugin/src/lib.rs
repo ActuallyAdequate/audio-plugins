@@ -41,6 +41,9 @@ pub struct DelayParam {
 
     #[id = "capacity"]
     pub capacity: FloatParam,
+
+    #[id = "factor"]
+    pub factor: FloatParam,
 }
 
 impl Default for BorderSecurityPlugin {
@@ -65,7 +68,7 @@ impl Default for BorderSecurityPluginParams {
             ),
             threshold: FloatParam::new(
                 format!("Threshold {index}"),
-                util::db_to_gain(0.0),
+                util::db_to_gain(-30.0),
                 FloatRange::Skewed {
                     min: util::db_to_gain(-30.0),
                     max: util::db_to_gain(30.0),
@@ -76,13 +79,21 @@ impl Default for BorderSecurityPluginParams {
             ),
             capacity: FloatParam::new(
                 format!("Threshold {index}"),
-                util::db_to_gain(0.0),
+                util::db_to_gain(30.0),
                 FloatRange::Skewed {
                     min: util::db_to_gain(-30.0),
                     max: util::db_to_gain(30.0),
                     // This makes the range appear as if it was linear when displaying the values as
                     // decibels
                     factor: FloatRange::gain_skew_factor(-30.0, 30.0),
+                },
+            ),
+            factor: FloatParam::new(
+                format!("Threshold {index}"),
+                util::db_to_gain(0.0),
+                FloatRange::Linear {
+                    min: util::db_to_gain(-1.0),
+                    max: util::db_to_gain(1.0),
                 },
             ),
         });
@@ -182,14 +193,18 @@ impl Plugin for BorderSecurityPlugin {
                     let delay_length = self.params.delay_params[j].delay.value();
                     let threshold = self.params.delay_params[j].threshold.value();
                     let capacity = self.params.delay_params[j].capacity.value();
+                    let factor = self.params.delay_params[j].factor.value();
 
                     let read_offset = (delay_length / MAX_DELAY as f32
                         * ((delay_buffer.samples() - 1) as f32))
                         as usize;
                     let delayed_sample = delay_buffer.read(read_offset);
-                    if delayed_sample > threshold && delayed_sample < capacity {
-                        wet_sample += delayed_sample;
-                    }
+                    let delay_factor = if delayed_sample > threshold && delayed_sample < capacity {
+                        factor
+                    } else {
+                        0.0
+                    };
+                    wet_sample += delayed_sample * delay_factor;
                 }
                 *sample = *sample * (1.0 - crossfade_factor) + wet_sample * crossfade_factor;
             }
