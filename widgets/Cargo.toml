@@ -1,0 +1,11 @@
+[package]
+name = "widgets"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vizia = "0.1.0"
+nih_plug = { path="../nih-plug/", features = ["assert_process_allocs", "standalone"] }
+nih_plug_vizia = { path="../nih-plug/nih_plug_vizia/"}

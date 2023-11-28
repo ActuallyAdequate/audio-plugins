@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 use crate::BorderSecurityPluginParams;
 
+use widgets::time_slider::*;
+
 #[derive(Lens)]
 struct Data {
     params: Arc<BorderSecurityPluginParams>,
@@ -16,7 +18,7 @@ impl Model for Data {}
 
 // Makes sense to also define this here, makes it a bit easier to keep track of
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (200, 150))
+    ViziaState::new(|| (600, 400))
 }
 
 pub(crate) fn create(
@@ -45,15 +47,17 @@ pub(crate) fn create(
                 .child_bottom(Pixels(0.0));
 
             for i in 0..params.delay_params.len() {
-                let name = format!("Delay {i}");
-                Label::new(cx, &name);
-                ParamSlider::new(cx, Data::params, move |params| {
-                    &params.delay_params[i].delay
-                });
+                HStack::new(cx, |cx| {
+                    TimeSlider::new(cx, Data::params, move |params| {
+                        &params.delay_params[i].delay
+                    })
+                    .set_style(TimeSliderStyle::CurrentStep { even: true })
+                    .background_color(Color::rgb(120, 86, 28))
+                    .color(Color::rgb(212, 214, 77))
+                    .border_color(Color::rgb(28, 32, 46));
+                })
+                .height(Auto);
             }
-        })
-        .row_between(Pixels(0.0))
-        .child_left(Stretch(1.0))
-        .child_right(Stretch(1.0));
+        });
     })
 }

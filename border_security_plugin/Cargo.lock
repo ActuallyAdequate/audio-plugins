@@ -303,6 +303,7 @@ dependencies = [
  "array-init",
  "nih_plug",
  "nih_plug_vizia",
+ "widgets",
 ]
 
 [[package]]
@@ -1602,7 +1603,7 @@ dependencies = [
  "nih_plug",
  "nih_plug_assets",
  "serde",
- "vizia",
+ "vizia 0.1.0 (git+https://github.com/robbert-vdh/vizia.git?branch=patched)",
 ]
 
 [[package]]
@@ -2679,6 +2680,12 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "vizia"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59e6388a13de3e9f5294b650e18c6442db499885d3a891c5d876cbc8597dcdc2"
+
+[[package]]
+name = "vizia"
+version = "0.1.0"
 source = "git+https://github.com/robbert-vdh/vizia.git?branch=patched#39e295ae30e542a0b8a82546e0003568da5b74d6"
 dependencies = [
  "vizia_baseview",
@@ -3019,6 +3026,15 @@ name = "widestring"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "653f141f39ec16bba3c5abe400a0c60da7468261cc2cbf36805022876bc721a8"
+
+[[package]]
+name = "widgets"
+version = "0.1.0"
+dependencies = [
+ "nih_plug",
+ "nih_plug_vizia",
+ "vizia 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "winapi"

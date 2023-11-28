@@ -19,6 +19,7 @@ array-init = "2.1.0"
 # thread in debug builds.
 nih_plug = { path="../nih-plug/", features = ["assert_process_allocs", "standalone"] }
 nih_plug_vizia = { path="../nih-plug/nih_plug_vizia/"}
+widgets ={path="../widgets/"}
 # Uncomment the below line to disable the on-by-default VST3 feature to remove
 # the GPL compatibility requirement
 # nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default_features = false, features = ["assert_process_allocs"] }
